@@ -1,0 +1,38 @@
+.navbar {
+    height: 40px;
+    background: rgb(86, 157, 250);
+    position: sticky;
+    padding-top:0;
+    padding-bottom: 0;
+}
+.navbar-container {
+    margin-top: 0;
+}
+.navbar-container>ul {
+    justify-content: start;
+    grid-gap: 0px;
+}
+.navbar-element {
+    padding-top:7px;
+    padding-bottom: 7px;
+    padding-left:10px;
+    padding-right:10px;
+}
+
+.navbar-element:hover {
+    background: rgb(158, 200, 255);
+    border-bottom: orange solid 2px;
+}
+
+
+.navbar-link {
+    color: #fff;
+    font-weight: 500;
+
+
+}
+
+.navbar-link:hover {
+    text-decoration: none;    
+    color: #fff;
+}
