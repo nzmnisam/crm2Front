@@ -51,37 +51,25 @@ ul {
 }
 
 .header-item-logout>button {
-    border-radius: 0px;
-    border: none;
     font-size:1.1rem;
-    outline: none;
+    color:rgb(231, 231, 231);
+   
 }
 
 .header-item-logout>button:hover {
     background-color: initial;
     color:rgb(192, 192, 192);
+    text-decoration: none;
 }
 
 .header-item-logout>button:after {
     border:none;
     outline: none;
-    background-color: #fff;
+    background-color: rgba(255, 255, 255, 0);
 }
 
 .header-item-logout>button:active:after {
     border:none;
     outline: none;
-    background-color: #fff;
-}
-
-.logout-link {
-    text-decoration: none;
-    color:rgb(226, 226, 226);
-    transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-}
-
-.logout-link:hover {
-    text-decoration: none;
-    color:rgb(192, 192, 192);
-
+    background-color: rgba(255, 255, 255, 0);
 }

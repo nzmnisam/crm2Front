@@ -1,50 +1,25 @@
-import React, { useEffect, useState} from 'react'
-import { Link, useHistory } from 'react-router-dom';
+import React from 'react'
+import { useHistory } from 'react-router-dom';
 import { Button } from 'react-bootstrap';
 import '../styles/Header.css'
 
-function Header() {
-   // const [whoIsLoggedIn, setWhoIsLoggedIn] = useState('')
-    const [role, setRole] = useState()
+function Header({userType='', setRole, setUserType}) {
     const history = useHistory();
+    
 
     const logOut = () => {
         window.localStorage.removeItem('api_token')
         window.localStorage.removeItem('role')
         setRole('')
-      //  setWhoIsLoggedIn('')
+        setUserType('')
         history.push('/login')
     }
     
-    useEffect(() => {
-        const localRole = window.localStorage.getItem('role')
-        console.log(localRole);
-        if(localRole) {
-            setRole(localRole)
-        } else {
-            setRole('')
-        }
-    })
-    // useEffect(() => {
-    //     function checkRole() {
-    //         const localRole = window.localStorage.getItem('role')
-    //         if(localRole) {
-    //             setRole(role)
-    //             if(localRole === 'manager') {
-    //                 setWhoIsLoggedIn('Manager view')
-    //             }
-    //             if(localRole !== 'manager') {
-    //                 setWhoIsLoggedIn('Employee view')
-    //             }
-    //         } else {
-    //             setWhoIsLoggedIn('')
-    //         }
-    //     }
-    //     window.addEventListener('storage', checkRole)
-    //     return () => {
-    //         window.removeEventListener('storage', checkRole)
-    //     }
-    // },[])
+    let logoutButton
+    if(userType !== '') {
+        logoutButton = <Button variant='link' onClick={logOut} className="logout-button">Logout</Button>
+    }
+
     return (
         <>
             <nav className="header">
@@ -52,10 +27,10 @@ function Header() {
                     <h1 className="header-logo">ITEH CRM 2021</h1>
                     <ul>
                         <li className="header-item-view">
-                            {role}
+                            {userType}
                         </li>
                         <li className="header-item-logout">
-                            <Button onClick={logOut} className="logout-button">Logout</Button>
+                            {logoutButton}
                         </li>
                     </ul>
                 </div>

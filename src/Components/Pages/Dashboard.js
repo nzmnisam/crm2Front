@@ -1,6 +1,7 @@
 import React, {Component} from 'react'
 import axios from 'axios'
 import Contact from './Contact'
+import '../../styles/Component.css'
 
 
 class Dashboard extends Component {
@@ -27,7 +28,7 @@ class Dashboard extends Component {
     render() {
         const contacts = this.contacts;
         return (
-            <div>
+            <div className='container'>
                 dashboard
 
             </div>
