@@ -1,5 +1,7 @@
 import React, {useEffect, useState} from 'react';
-import {Redirect, Route, RouteProps, useHistory} from 'react-router-dom';
+import {Redirect, Route, useHistory} from 'react-router-dom';
+import EditContact from "./Pages/EditContact";
+
 
 
 const PrivateRoute = ({children, ...rest}) => {
@@ -9,27 +11,26 @@ const PrivateRoute = ({children, ...rest}) => {
 
     useEffect(() => {
         const apiToken = window.localStorage.getItem('api_token')
-        console.log(apiToken)
         if(apiToken) {
             setIsLoggedIn(true)
         } else {
-            history.push('/login')
+            history.push('/Login')
         }
-    })
+
+    },[history, isLoggedIn])
+  //  console.log(rest)
 
     return (
         <Route
             {...rest}
-            render={({location}) => {
+            render={() => { 
                 return isLoggedIn ? (
-                    children
+                      children
                 ) : (
                     <Redirect
-                        to=
-                            '/staff/login'
-                        
+                        to='/Login'
                     />
-                );
+                )
             }}
         />
     );

@@ -3,32 +3,59 @@ import isEqual from "lodash.isequal";
 import { useParams, useHistory } from "react-router";
 import { Form, Button } from "react-bootstrap";
 
-const RegisterUser = ({ api, setRefresh }) => {
+import "../../styles/Page.css";
+
+const ManageEmployee = ({ api, setRefresh }) => {
   const history = useHistory();
 
+  const { id } = useParams();
   const [staffMember, setStaffMember] = useState();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [password_confirmation, setPasswordConfirmation] = useState("");
-  const [role, setRole] = useState("sales");
-  const [status, setStatus] = useState("1");
+  const [role, setRole] = useState("");
+  const [status, setStatus] = useState("");
+
+  useEffect(() => {
+    const apiToken = window.localStorage.getItem("api_token");
+    const role = window.localStorage.getItem("role");
+    api
+      .get(`/staff/${id}`, { headers: { token: apiToken, role: role } })
+      .then((res) => {
+        if (!isEqual(res.data, staffMember)) {
+          setStaffMember(res.data);
+          fillForm(res.data);
+        }
+      })
+      .catch((error) => {
+        if (error.response.status === 404) {
+          return alert("Staff member with this ID doesn't exist");
+        }
+        console.log(error.response.data.message);
+      });
+  }, [api, staffMember, id]);
+
+  const fillForm = (data) => {
+    //console.log(data);
+    setName(data.name);
+    setEmail(data.email);
+    setPassword(data.password);
+    setRole(data.role);
+    setStatus(data.status);
+  };
 
   const onSubmit = (e) => {
-    e.preventDefault();
-    console.log(role);
     const apiToken = window.localStorage.getItem("api_token");
     const signedInRole = window.localStorage.getItem("role");
 
     api
-      .post(
-        `/staff/register`,
+      .put(
+        `/staff/${id}`,
         {
           name,
           email,
           password,
-          password_confirmation,
           role,
           status,
         },
@@ -36,45 +63,43 @@ const RegisterUser = ({ api, setRefresh }) => {
         { headers: { token: apiToken, role: signedInRole } }
       )
       .then((res) => {
+        console.log(res);
         setStaffMember(res.data);
         // console.log(contacts);
         setRefresh(true);
-        alert("Staff member successfully added");
+        alert("Staff member successfully updated");
         history.push("/Dashboard");
       })
       .catch((error) => {
-        const emailErr = error.response.data.message.email;
-        const nameErr = error.response.data.message.name;
-        const passwordErr = error.response.data.message.password;
-        const roleErr = error.response.data.message.role;
-        const statusErr = error.response.data.message.status;
-        let message = ["", "", "", "", ""];
-        if (emailErr !== undefined) {
-          message[1] = "Email is " + emailErr + "\n";
-        }
-        if (nameErr !== undefined) {
-          message[0] = "Name is " + nameErr + "\n";
-        }
-        if (passwordErr !== undefined) {
-          message[2] = "Password is " + passwordErr + "\n";
-        }
-        if (roleErr !== undefined) {
-          message[3] = "Role is " + roleErr + "\n";
-        }
-        if (statusErr !== undefined) {
-          message[4] = "Status is " + statusErr + "\n";
-        }
-        // console.log(error.response.data.message.status);
-        // const data = error.response.data;
-        // data.map((poruka, i) => console.log(data[i]));
-        alert(message);
+        alert(error.response.data.message);
       });
     e.preventDefault();
     console.log("Submit");
   };
+
+  const onDelete = (e) => {
+    e.preventDefault();
+    const apiToken = window.localStorage.getItem("api_token");
+    const role = window.localStorage.getItem("role");
+
+    if (window.confirm("Are you sure you want to delete staff member?")) {
+      api
+        .delete(`staff/${id}`, { headers: { token: apiToken, role: role } })
+        .then((res) => {
+          // setContact({});
+          setRefresh(true);
+          alert("Staff member deleted");
+          history.push("/Dashboard");
+        })
+        .catch((error) => {
+          alert(error.response.data.message);
+        });
+    }
+  };
+
   return (
     <div className="container">
-      <h5>Register new staff member:</h5>
+      <h5>Staff member details:</h5>
       <div className="form-container">
         <Form>
           <hr />
@@ -112,17 +137,6 @@ const RegisterUser = ({ api, setRefresh }) => {
             />
           </div>
           <div className="input-container">
-            <p>Confirm password:</p>
-            <Form.Control
-              type="text"
-              name="password"
-              value={password_confirmation}
-              onChange={(e) => {
-                setPasswordConfirmation(e.target.value);
-              }}
-            />
-          </div>
-          <div className="input-container">
             <p>Role:</p>
             <Form.Control
               as="select"
@@ -155,6 +169,9 @@ const RegisterUser = ({ api, setRefresh }) => {
             <Button type="submit" onClick={onSubmit} className="accept-button">
               Accept
             </Button>
+            <Button type="submit" onClick={onDelete} className="delete-button">
+              Delete
+            </Button>
           </div>
         </Form>
       </div>
@@ -162,4 +179,4 @@ const RegisterUser = ({ api, setRefresh }) => {
   );
 };
 
-export default RegisterUser;
+export default ManageEmployee;

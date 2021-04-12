@@ -1,0 +1,28 @@
+.notes-textarea > textarea {
+  margin-left: 85px;
+  font-size: 0.9rem;
+}
+
+.accept-button,
+.delete-button {
+  margin-top: 30px;
+}
+
+.accept-button {
+  margin-left: 160px;
+}
+
+.delete-button {
+  margin-left: 20px;
+}
+
+.buttons > button {
+  margin-top: 25px;
+  /* margin-left: 150px; */
+  border-radius: unset;
+  border: unset;
+  width: 100px;
+  padding: 2px;
+  font-size: 1.2rem;
+  background-color: tomato;
+}

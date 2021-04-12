@@ -1,12 +1,48 @@
-
 .tabela {
-    width: 100rem;
-    margin-top:2rem;
-    margin-left:auto;
-    margin-right:auto;
+  width: 100%;
+  margin-top: 50px;
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 0.9rem;
+}
+.tabela > table {
+  border-left: none;
+  border-right: none;
 }
 
-Table {
-    margin-top: 5px;
-    
+.table-header > th {
+  border: none;
+}
+
+tbody > tr > td {
+  border: none !important;
+  min-width: 100px;
+}
+
+.stage-header {
+  color: rgb(255, 255, 255);
+  background-color: rgb(66, 132, 219);
+  font-weight: 500;
+}
+
+.stage-header:hover {
+  background-color: rgb(66, 132, 219) !important;
+  color: rgb(255, 255, 255) !important;
+}
+.stage-header > td {
+  padding-left: 20px;
+}
+.total-row {
+  color: rgb(255, 255, 255);
+  background-color: rgb(58, 58, 58);
+  font-weight: 500;
+}
+
+.total-row > td {
+  padding-left: 20px;
+  border: none;
+}
+
+.sort-icon {
+  margin-left: 5px;
 }

@@ -1,12 +1,23 @@
-import React, { useState } from "react";
-import { useHistory } from "react-router";
+import React, { useEffect, useState } from "react";
+import { useParams, useHistory } from "react-router";
 import "../../styles/Page.css";
 import "../../styles/EditContact.css";
 
+import isEqual from "lodash.isequal";
 import { Form, Button } from "react-bootstrap";
+import { DateTime } from "luxon";
 
-const NewLead = ({ api, stages, setRefresh }) => {
+const EditContact = ({
+  api,
+  setContacts,
+  contacts,
+  stages,
+  refresh,
+  setRefresh,
+}) => {
   const history = useHistory();
+  const [contact, setContact] = useState();
+  const { id } = useParams();
 
   const [first_name, setFirstName] = useState("");
   const [last_name, setLastName] = useState("");
@@ -27,13 +38,57 @@ const NewLead = ({ api, stages, setRefresh }) => {
   const [follow_up_date, setFollowUpDate] = useState("");
   const [notes, setNotes] = useState("");
 
+  useEffect(() => {
+    const apiToken = window.localStorage.getItem("api_token");
+    api
+      .get(`/contacts/${id}`, { headers: { token: apiToken } })
+      .then((res) => {
+        if (!isEqual(res.data, contact)) {
+          setContact(res.data);
+          fillForm(res.data);
+        }
+      })
+      .catch((error) => {
+        if (error.response.status === 404) {
+          return alert("Lead with this ID doesn't exist");
+        }
+        console.log(error.response.data.message);
+      });
+  }, [api, contact, id]);
+
+  const fillForm = (data) => {
+    //console.log(data);
+    setFirstName(data.first_name);
+    setLastName(data.last_name);
+    setTitle(data.title);
+    setPhone(data.phone);
+    setEmail(data.email);
+    setContactMethod(data.contact_method);
+
+    setCompany(data.company);
+    setAddress(data.address);
+    setAddress2(data.address2);
+    setCity(data.city);
+    setZipCode(data.zip_code);
+    setWebsiteUrl(data.website_url);
+
+    setStage(data.stage_id);
+    setDealSize(data.deal_size);
+    setFollowUpDate(
+      DateTime.fromFormat(data.follow_up_date, "yyyy-MM-dd").toFormat(
+        "yyyy-MM-dd"
+      )
+    );
+    setNotes(data.notes);
+  };
+
   const onSubmit = (e) => {
     e.preventDefault();
     const apiToken = window.localStorage.getItem("api_token");
-    const staff_id = window.localStorage.getItem("staff_id");
+
     api
-      .post(
-        `/contacts`,
+      .put(
+        `/contacts/${id}`,
         {
           first_name,
           last_name,
@@ -51,13 +106,15 @@ const NewLead = ({ api, stages, setRefresh }) => {
           deal_size,
           follow_up_date,
           notes,
-          staff_id,
         },
         { headers: { token: apiToken } }
       )
       .then((res) => {
+        console.log(res);
+        setContact(res.data);
+        console.log(contacts);
         setRefresh(true);
-        alert("Lead successfully added");
+        alert("Lead successfully updated");
         history.push("/Dashboard");
       })
       .catch((error) => {
@@ -65,9 +122,30 @@ const NewLead = ({ api, stages, setRefresh }) => {
       });
   };
 
+  const onDelete = (e) => {
+    e.preventDefault();
+    const apiToken = window.localStorage.getItem("api_token");
+    //  let dialogAnswer = alert("Are you sure you want to delete the lead?");
+    //  console.log(dialogAnswer);
+    if (window.confirm("Are you sure you want to delete a lead?")) {
+      api
+        .delete(`contacts/${id}`, { headers: { token: apiToken } })
+        .then((res) => {
+          // setContact({});
+          setRefresh(true);
+          alert("Lead deleted");
+          history.push("/Dashboard");
+        })
+        .catch((error) => {
+          alert(error.response.data.message);
+        });
+    }
+  };
+
+  // console.log(contact);
   return (
     <div className="container">
-      <h5>New Lead:</h5>
+      <h5>Edit Lead:</h5>
       <div className="form-container">
         <Form>
           <hr />
@@ -268,6 +346,9 @@ const NewLead = ({ api, stages, setRefresh }) => {
             <Button type="submit" onClick={onSubmit} className="accept-button">
               Accept
             </Button>
+            <Button type="submit" onClick={onDelete} className="delete-button">
+              Delete
+            </Button>
           </div>
         </Form>
       </div>
@@ -275,4 +356,4 @@ const NewLead = ({ api, stages, setRefresh }) => {
   );
 };
 
-export default NewLead;
+export default EditContact;
