@@ -30,6 +30,11 @@ function Navbar({ role }) {
                 DASHBOARD
               </Link>
             </li>
+            <li className="navbar-element">
+              <Link to="/Companies" className="navbar-link">
+                COMPANIES
+              </Link>
+            </li>
             <li className="navbar-element">{navLinks[0]}</li>
             {/* <li className="navbar-element">
                             {navLinks[1]}

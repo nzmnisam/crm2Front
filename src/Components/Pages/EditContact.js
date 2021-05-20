@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useHistory } from "react-router";
 import "../../styles/Page.css";
 import "../../styles/EditContact.css";
@@ -12,49 +12,106 @@ const EditContact = ({
   setContacts,
   contacts,
   stages,
+  cities,
+  companies,
+  setCompanies,
+  setCities,
   refresh,
   setRefresh,
 }) => {
+  const [staff_id, setStaff_id] = useState(localStorage.getItem("staff_id"));
   const history = useHistory();
   const [contact, setContact] = useState();
   const { id } = useParams();
 
-  const [first_name, setFirstName] = useState("");
-  const [last_name, setLastName] = useState("");
-  const [title, setTitle] = useState("");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [contact_method, setContactMethod] = useState("");
+  const [first_name, setFirstName] = useState();
+  const [last_name, setLastName] = useState();
+  const [title, setTitle] = useState();
+  const [phone, setPhone] = useState();
+  const [email, setEmail] = useState();
+  const [contact_method, setContactMethod] = useState();
 
-  const [company, setCompany] = useState("");
-  const [address, setAddress] = useState("");
-  const [address2, setAddress2] = useState("");
-  const [city, setCity] = useState("");
-  const [zip_code, setZipCode] = useState("");
-  const [website_url, setWebsiteUrl] = useState("");
+  const [companyId, setCompanyId] = useState();
+  const [company, setCompany] = useState();
+  const [address, setAddress] = useState();
+  const [address2, setAddress2] = useState();
+  const [website_url, setWebsiteUrl] = useState();
 
-  const [stage_id, setStage] = useState("");
-  const [deal_size, setDealSize] = useState("");
-  const [follow_up_date, setFollowUpDate] = useState("");
-  const [notes, setNotes] = useState("");
+  const [stage_id, setStage] = useState();
+  const [city_id, setCity] = useState();
+  const [deal_size, setDealSize] = useState();
+  const [follow_up_date, setFollowUpDate] = useState();
+  const [notes, setNotes] = useState();
 
-  useEffect(() => {
+  let addedUpdatedCompany;
+
+  const fetchData = useCallback(() => {
     const apiToken = window.localStorage.getItem("api_token");
     api
-      .get(`/contacts/${id}`, { headers: { token: apiToken } })
+      .get(`/contacts/detailed/${id}`, { headers: { token: apiToken } })
       .then((res) => {
-        if (!isEqual(res.data, contact)) {
-          setContact(res.data);
-          fillForm(res.data);
+        console.log(res);
+        if (!isEqual(res.data[0], contact)) {
+          setContact(res.data[0]);
+          fillForm(res.data[0]);
         }
       })
       .catch((error) => {
+        console.log(error);
         if (error.response.status === 404) {
           return alert("Lead with this ID doesn't exist");
         }
         console.log(error.response.data.message);
       });
   }, [api, contact, id]);
+
+  function updateContacts(
+    firstName,
+    lastName,
+    titlE,
+    dealSize,
+    followUpDate,
+    phonE,
+    emaiL,
+    contactMethod,
+    noteS,
+    companyID,
+    stageId
+  ) {
+    const apiToken = window.localStorage.getItem("api_token");
+    api
+      .put(
+        `/contacts/${id}`,
+        {
+          first_name: firstName,
+          last_name: lastName,
+          title: titlE,
+          deal_size: dealSize,
+          follow_up_date: followUpDate,
+          phone: phonE,
+          email: emaiL,
+          contact_method: contactMethod,
+          notes: noteS,
+          company_id: companyID,
+          stage_id: stageId,
+        },
+        { headers: { token: apiToken } }
+      )
+      .then((res) => {
+        console.log(res.data);
+        setRefresh(true);
+        //setCompanies(...companies, addedUpdatedCompany);
+        alert("Lead successfully updated");
+        history.push("/Dashboard");
+      })
+      .catch((error) => {
+        alert(error.response.data.message);
+      });
+  }
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const fillForm = (data) => {
     //console.log(data);
@@ -65,68 +122,36 @@ const EditContact = ({
     setEmail(data.email);
     setContactMethod(data.contact_method);
 
-    setCompany(data.company);
-    setAddress(data.address);
-    setAddress2(data.address2);
-    setCity(data.city);
-    setZipCode(data.zip_code);
-    setWebsiteUrl(data.website_url);
+    setCompanyId(data.company_id);
 
     setStage(data.stage_id);
     setDealSize(data.deal_size);
-    setFollowUpDate(
-      DateTime.fromFormat(data.follow_up_date, "yyyy-MM-dd").toFormat(
-        "yyyy-MM-dd"
-      )
-    );
+
+    setFollowUpDate(data.follow_up_date);
     setNotes(data.notes);
   };
 
   const onSubmit = (e) => {
     e.preventDefault();
-    const apiToken = window.localStorage.getItem("api_token");
-
-    api
-      .put(
-        `/contacts/${id}`,
-        {
-          first_name,
-          last_name,
-          title,
-          phone,
-          email,
-          contact_method,
-          company,
-          address,
-          address2,
-          city,
-          zip_code,
-          website_url,
-          stage_id,
-          deal_size,
-          follow_up_date,
-          notes,
-        },
-        { headers: { token: apiToken } }
-      )
-      .then((res) => {
-        console.log(res);
-        setContact(res.data);
-        console.log(contacts);
-        setRefresh(true);
-        alert("Lead successfully updated");
-        history.push("/Dashboard");
-      })
-      .catch((error) => {
-        alert(error.response.data.message);
-      });
+    //apdejtovanje kontakta
+    updateContacts(
+      first_name,
+      last_name,
+      title,
+      deal_size,
+      follow_up_date,
+      phone,
+      email,
+      contact_method,
+      notes,
+      companyId,
+      stage_id
+    );
   };
 
   const onDelete = (e) => {
     e.preventDefault();
     const apiToken = window.localStorage.getItem("api_token");
-    //  let dialogAnswer = alert("Are you sure you want to delete the lead?");
-    //  console.log(dialogAnswer);
     if (window.confirm("Are you sure you want to delete a lead?")) {
       api
         .delete(`contacts/${id}`, { headers: { token: apiToken } })
@@ -142,7 +167,6 @@ const EditContact = ({
     }
   };
 
-  // console.log(contact);
   return (
     <div className="container">
       <h5>Edit Lead:</h5>
@@ -220,75 +244,6 @@ const EditContact = ({
             </Form.Control>
           </div>
 
-          <h5>Company details: </h5>
-          <hr />
-          <div className="input-container">
-            <p>Company:</p>
-            <Form.Control
-              type="text"
-              name="company"
-              value={company}
-              onChange={(e) => {
-                setCompany(e.target.value);
-              }}
-            />
-          </div>
-          <div className="input-container">
-            <p>Address:</p>
-            <Form.Control
-              type="text"
-              name="address"
-              value={address}
-              onChange={(e) => {
-                setAddress(e.target.value);
-              }}
-            />
-          </div>
-          <div className="input-container">
-            <p>Address 2:</p>
-            <Form.Control
-              type="text"
-              name="address2"
-              value={address2}
-              onChange={(e) => {
-                setAddress2(e.target.value);
-              }}
-            />
-          </div>
-          <div className="input-container">
-            <p>City:</p>
-            <Form.Control
-              type="text"
-              name="city"
-              value={city}
-              onChange={(e) => {
-                setCity(e.target.value);
-              }}
-            />
-          </div>
-          <div className="input-container">
-            <p>Zip code:</p>
-            <Form.Control
-              type="text"
-              name="zip_code"
-              value={zip_code}
-              onChange={(e) => {
-                setZipCode(e.target.value);
-              }}
-            />
-          </div>
-          <div className="input-container">
-            <p>Website url:</p>
-            <Form.Control
-              type="text"
-              name="website-url"
-              value={website_url}
-              onChange={(e) => {
-                setWebsiteUrl(e.target.value);
-              }}
-            />
-          </div>
-
           <hr />
           <div className="input-container">
             <p>Stage:</p>
@@ -330,6 +285,26 @@ const EditContact = ({
               }}
             />
           </div>
+
+          <div className="input-container">
+            <p>Company:</p>
+            <Form.Control
+              as="select"
+              name="company"
+              value={companyId}
+              onChange={(e) => {
+                setCompanyId(e.target.value);
+              }}
+            >
+              <option value="">Select Company</option>
+              {companies.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.company}
+                </option>
+              ))}
+            </Form.Control>
+          </div>
+
           <div className="input-container notes-textarea">
             <p>Notes:</p>
             <Form.Control
@@ -342,6 +317,7 @@ const EditContact = ({
               }}
             />
           </div>
+
           <div className="buttons">
             <Button type="submit" onClick={onSubmit} className="accept-button">
               Accept

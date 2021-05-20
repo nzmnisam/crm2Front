@@ -17,6 +17,9 @@ import RegisterUser from "./Components/Pages/RegisterUser";
 import ManageEmployee from "./Components/Pages/ManageEmployee";
 import isEqual from "lodash.isequal";
 import EditContact from "./Components/Pages/EditContact";
+import Companies from "./Components/Pages/Companies";
+import EditCompany from "./Components/Pages/EditCompany";
+import AddCompany from "./Components/Pages/AddCompany";
 
 const api = axios.create({
   baseURL: "http://127.0.0.1:8000/api",
@@ -28,6 +31,9 @@ const timeApi = axios.create({
 
 const App = () => {
   const [stages, setStages] = useState([]);
+  const [cities, setCities] = useState([]);
+  const [companies, setCompanies] = useState([]);
+  const [companiesDetailed, setCompaniesDetailed] = useState([]);
 
   const [contacts, setContacts] = useState([]);
 
@@ -37,6 +43,8 @@ const App = () => {
   const [userType, setUserType] = useState("");
   const [refresh, setRefresh] = useState(false);
   // const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const apiToken = window.localStorage.getItem("api_token");
+  const staffId = window.localStorage.getItem("staff_id");
 
   useEffect(() => {
     const storedRole = window.localStorage.getItem("role");
@@ -48,11 +56,73 @@ const App = () => {
     } else {
       setUserType("");
     }
+  }, [role]);
 
+  useEffect(() => {
+    if (role !== "") {
+      api
+        .get(`/companies/detailed`, { headers: { token: apiToken } })
+        .then((res) => {
+          if (!isEqual(res.data, companiesDetailed)) {
+            setCompaniesDetailed(res.data);
+          }
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    }
+  }, [apiToken, companiesDetailed, role, refresh]);
+
+  useEffect(() => {
+    if (role !== "") {
+      api
+        .get(`/companies`, { headers: { token: apiToken } })
+        .then((res) => {
+          if (!isEqual(res.data, companies)) {
+            setCompanies(res.data);
+          }
+        })
+        .catch((error) => {
+          if (error.response.status === 404) {
+            return alert("Can't retrieve companies");
+          }
+        });
+    }
+  }, [apiToken, companies, role, refresh]);
+
+  useEffect(() => {
+    if (role === "manager") {
+      api
+        .get(`/staff`, { headers: { token: apiToken } })
+        .then((res) => {
+          res.data.map((staffMember, i) => {
+            res.data[i].deal_size = 0;
+          });
+          res.data.map((staffMember, i) => {
+            let totalDealSize = 0;
+            contacts.map((contact) => {
+              if (contact.staff_id === staffMember.id) {
+                // console.log(contact.deal _size);
+                totalDealSize += contact.deal_size;
+                // staff[i].deal_size = 0;
+              }
+            });
+            res.data[i].deal_size = totalDealSize;
+          });
+
+          if (!isEqual(res.data, staff)) {
+            setStaff(res.data);
+          }
+        })
+        .catch((error) => {
+          console.log(error.response.data.message);
+        });
+    }
+  }, [apiToken, contacts, role, staff, refresh]);
+
+  useEffect(() => {
     if (role !== "") {
       setRefresh(false);
-      const apiToken = window.localStorage.getItem("api_token");
-      const staffId = window.localStorage.getItem("staff_id");
 
       api
         .get(`/contacts/detailed`, { headers: { token: apiToken } })
@@ -65,45 +135,34 @@ const App = () => {
           console.log(error.response.data.message);
         });
 
-      if (role === "manager") {
+      if (!stages.length) {
         api
-          .get(`/staff`, { headers: { token: apiToken } })
+          .get(`/stages`, { headers: { token: apiToken } })
           .then((res) => {
-            res.data.map((staffMember, i) => {
-              res.data[i].deal_size = 0;
-            });
-            res.data.map((staffMember, i) => {
-              let totalDealSize = 0;
-              contacts.map((contact) => {
-                if (contact.staff_id === staffMember.id) {
-                  // console.log(contact.deal_size);
-                  totalDealSize += contact.deal_size;
-                  // staff[i].deal_size = 0;
-                }
-              });
-              res.data[i].deal_size = totalDealSize;
-            });
-
-            if (!isEqual(res.data, staff)) {
-              setStaff(res.data);
+            if (!isEqual(res.data, stages)) {
+              setStages(res.data);
             }
           })
           .catch((error) => {
             console.log(error.response.data.message);
           });
       }
-      api
-        .get(`/stages`, { headers: { token: apiToken } })
-        .then((res) => {
-          if (!isEqual(res.data, stages)) {
-            setStages(res.data);
-          }
-        })
-        .catch((error) => {
-          console.log(error.response.data.message);
-        });
+      if (!cities.length) {
+        api
+          .get(`/cities`, { headers: { token: apiToken } })
+          .then((res) => {
+            if (!isEqual(res.data, cities)) {
+              setCities(res.data);
+            }
+          })
+          .catch((error) => {
+            if (error.response.status === 404) {
+              return alert("Can't retrieve cities");
+            }
+          });
+      }
     }
-  }, [role, contacts, staff, stages, refresh]);
+  }, [role, contacts, stages, refresh, cities, apiToken]);
 
   let navbar;
   if (role !== "") {
@@ -156,8 +215,40 @@ const App = () => {
               <NewLead
                 setContacts={setContacts}
                 stages={stages}
+                cities={cities}
+                setCities={setCities}
+                companies={companies}
+                setCompanies={setCompanies}
                 api={api}
                 setRefresh={setRefresh}
+              />
+            )}
+          />
+          <PrivateRoute
+            path="/AddCompany"
+            component={() => (
+              <AddCompany
+                cities={cities}
+                setCities={setCities}
+                api={api}
+                setRefresh={setRefresh}
+              />
+            )}
+          />
+          <PrivateRoute
+            path="/Companies"
+            component={() => (
+              <Companies
+                // stages={stages}
+                // setStages={setStages}
+                companies={companies}
+                setCompanies={setCompanies}
+                companiesDetailed={companiesDetailed}
+                setCompaniesDetailed={setCompaniesDetailed}
+                // role={role}
+                staff={staff}
+                // setStaff={setStaff}
+                api={api}
               />
             )}
           />
@@ -171,7 +262,11 @@ const App = () => {
               <EditContact
                 contacts={contacts}
                 stages={stages}
+                cities={cities}
+                setCities={setCities}
                 setContacts={setContacts}
+                companies={companies}
+                setCompanies={setCompanies}
                 api={api}
                 refresh={refresh}
                 setRefresh={setRefresh}
@@ -185,6 +280,17 @@ const App = () => {
                 contacts={contacts}
                 stages={stages}
                 setContacts={setContacts}
+                api={api}
+                refresh={refresh}
+                setRefresh={setRefresh}
+              />
+            )}
+          />
+          <PrivateRoute
+            path="/EditCompany/:id"
+            component={() => (
+              <EditCompany
+                cities={cities}
                 api={api}
                 refresh={refresh}
                 setRefresh={setRefresh}

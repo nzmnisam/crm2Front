@@ -5,7 +5,16 @@ import "../../styles/EditContact.css";
 
 import { Form, Button } from "react-bootstrap";
 
-const NewLead = ({ api, stages, setRefresh }) => {
+const NewLead = ({
+  api,
+  stages,
+  setRefresh,
+  cities,
+  setCities,
+  companies,
+  setCompanies,
+}) => {
+  const [staff_id, setStaff_id] = useState(localStorage.getItem("staff_id"));
   const history = useHistory();
 
   const [first_name, setFirstName] = useState("");
@@ -16,16 +25,75 @@ const NewLead = ({ api, stages, setRefresh }) => {
   const [contact_method, setContactMethod] = useState("");
 
   const [company, setCompany] = useState("");
+  const [companyId, setCompanyId] = useState("");
   const [address, setAddress] = useState("");
   const [address2, setAddress2] = useState("");
-  const [city, setCity] = useState("");
-  const [zip_code, setZipCode] = useState("");
   const [website_url, setWebsiteUrl] = useState("");
 
   const [stage_id, setStage] = useState("");
+  const [city_id, setCity] = useState("");
   const [deal_size, setDealSize] = useState("");
   const [follow_up_date, setFollowUpDate] = useState("");
   const [notes, setNotes] = useState("");
+
+  let addedUpdatedCompany;
+
+  const onAddUpdateCompany = (e) => {
+    e.preventDefault();
+    const apiToken = window.localStorage.getItem("api_token");
+
+    let update = false;
+    //ako kompanija nije nadjena napravi novu
+    api
+      .post(
+        `/companies`,
+        {
+          company,
+          address,
+          address2,
+          website_url,
+          city_id,
+          staff_id,
+        },
+        { headers: { token: apiToken } }
+      )
+      .then((response) => {
+        //apdejtuj state kompanija
+        addedUpdatedCompany = response.data;
+        const newCompanyId = response.data.id;
+        //postavi company_id kontakta na novi company_id
+        setCompanyId(newCompanyId);
+        //postavi ostala polja na nove atribute kompanije
+        setCompany(response.data.company);
+        setAddress(response.data.address);
+        setAddress2(response.data.address2);
+        setCity(response.data.city_id);
+        setWebsiteUrl(response.data.website_url);
+        alert("New Company Added");
+      })
+      .catch((error) => {
+        console.log(error);
+        alert(error.response.data.message);
+      });
+
+    //nakon ili ako ne dodje do setovanja druge kompanije apdejtuj postojecu ili novu
+    // api
+    //   .put(
+    //     `/companies/${companyId}`,
+    //     {
+    //       address,
+    //       address2,
+    //       city_id,
+    //       website_url,
+    //     },
+    //     { headers: { token: apiToken } }
+    //   )
+    //   .then((response) => {
+    //     console.log(response.data);
+    //     alert("Company Updated");
+    //   })
+    //   .catch((error) => console.log(error));
+  };
 
   const onSubmit = (e) => {
     e.preventDefault();
@@ -41,12 +109,7 @@ const NewLead = ({ api, stages, setRefresh }) => {
           phone,
           email,
           contact_method,
-          company,
-          address,
-          address2,
-          city,
-          zip_code,
-          website_url,
+          company_id: companyId,
           stage_id,
           deal_size,
           follow_up_date,
@@ -142,75 +205,6 @@ const NewLead = ({ api, stages, setRefresh }) => {
             </Form.Control>
           </div>
 
-          <h5>Company details: </h5>
-          <hr />
-          <div className="input-container">
-            <p>Company:</p>
-            <Form.Control
-              type="text"
-              name="company"
-              value={company}
-              onChange={(e) => {
-                setCompany(e.target.value);
-              }}
-            />
-          </div>
-          <div className="input-container">
-            <p>Address:</p>
-            <Form.Control
-              type="text"
-              name="address"
-              value={address}
-              onChange={(e) => {
-                setAddress(e.target.value);
-              }}
-            />
-          </div>
-          <div className="input-container">
-            <p>Address 2:</p>
-            <Form.Control
-              type="text"
-              name="address2"
-              value={address2}
-              onChange={(e) => {
-                setAddress2(e.target.value);
-              }}
-            />
-          </div>
-          <div className="input-container">
-            <p>City:</p>
-            <Form.Control
-              type="text"
-              name="city"
-              value={city}
-              onChange={(e) => {
-                setCity(e.target.value);
-              }}
-            />
-          </div>
-          <div className="input-container">
-            <p>Zip code:</p>
-            <Form.Control
-              type="text"
-              name="zip_code"
-              value={zip_code}
-              onChange={(e) => {
-                setZipCode(e.target.value);
-              }}
-            />
-          </div>
-          <div className="input-container">
-            <p>Website url:</p>
-            <Form.Control
-              type="text"
-              name="website-url"
-              value={website_url}
-              onChange={(e) => {
-                setWebsiteUrl(e.target.value);
-              }}
-            />
-          </div>
-
           <hr />
           <div className="input-container">
             <p>Stage:</p>
@@ -252,6 +246,26 @@ const NewLead = ({ api, stages, setRefresh }) => {
               }}
             />
           </div>
+
+          <div className="input-container">
+            <p>Company:</p>
+            <Form.Control
+              as="select"
+              name="company"
+              value={companyId}
+              onChange={(e) => {
+                setCompanyId(e.target.value);
+              }}
+            >
+              <option value="">Select Company</option>
+              {companies.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.company}
+                </option>
+              ))}
+            </Form.Control>
+          </div>
+
           <div className="input-container notes-textarea">
             <p>Notes:</p>
             <Form.Control
@@ -264,6 +278,7 @@ const NewLead = ({ api, stages, setRefresh }) => {
               }}
             />
           </div>
+
           <div className="buttons">
             <Button type="submit" onClick={onSubmit} className="accept-button">
               Accept

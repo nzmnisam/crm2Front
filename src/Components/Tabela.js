@@ -40,10 +40,17 @@ export default function Tabela({ columns, data }) {
     <div className="tabela">
       <Table {...getTableProps} hover bordered size="sm">
         <thead>
-          {headerGroups.map((headerGroup) => (
-            <tr {...headerGroup.getHeaderGroupProps()} className="table-header">
-              {headerGroup.headers.map((column) => (
-                <th {...column.getHeaderProps(column.getSortByToggleProps())}>
+          {headerGroups.map((headerGroup, i) => (
+            <tr
+              {...headerGroup.getHeaderGroupProps()}
+              className="table-header"
+              key={i}
+            >
+              {headerGroup.headers.map((column, i) => (
+                <th
+                  {...column.getHeaderProps(column.getSortByToggleProps())}
+                  key={i}
+                >
                   {column.render("Header")}
                   <span className="sort-icon">
                     {column.isSorted ? (
@@ -72,9 +79,11 @@ export default function Tabela({ columns, data }) {
             if (row.allCells[0].value === "1. Prospect (10%)") {
               return (
                 <tr {...row.getRowProps()} key={i}>
-                  {row.cells.map((cell) => {
+                  {row.cells.map((cell, i) => {
                     return (
-                      <td {...cell.getCellProps()}>{cell.render("Cell")}</td>
+                      <td {...cell.getCellProps()} key={i}>
+                        {cell.render("Cell")}
+                      </td>
                     );
                   })}
                 </tr>
@@ -126,9 +135,11 @@ export default function Tabela({ columns, data }) {
             if (row.allCells[0].value === "4. Won/Closed (100%)") {
               return (
                 <tr {...row.getRowProps()} key={i}>
-                  {row.cells.map((cell) => {
+                  {row.cells.map((cell, i) => {
                     return (
-                      <td {...cell.getCellProps()}>{cell.render("Cell")}</td>
+                      <td {...cell.getCellProps()} key={i}>
+                        {cell.render("Cell")}
+                      </td>
                     );
                   })}
                 </tr>
@@ -137,7 +148,7 @@ export default function Tabela({ columns, data }) {
           })}
         </tbody>
         <tfoot>
-          <tr className="total-row">
+          <tr className="total-row" key={1}>
             {headerGroups.map((headerGroup) =>
               headerGroup.headers.map((column, i) => {
                 if (i === 0) {

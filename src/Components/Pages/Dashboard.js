@@ -5,6 +5,7 @@ import isEqual from "lodash.isequal";
 import Tabela from "../Tabela";
 import ManagerTable from "../ManagerTable";
 import { Link } from "react-router-dom";
+
 import TextColumnFilter from "../TextColumnFilter";
 import DateColumnFilter from "../DateColumnFilter";
 import SelectStageColumnFilter from "../SelectStageColumnFilter";
@@ -15,6 +16,7 @@ import { DateTime } from "luxon";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircle } from "@fortawesome/free-solid-svg-icons";
 import { numberFormat } from "../NumberFormat";
+import ActiveStaffFilter from "../ActiveStaffFilter";
 
 const employeeColumns = [
   {
@@ -93,14 +95,17 @@ const managerColumns = [
   {
     Header: "Name",
     accessor: "name",
+    Filter: TextColumnFilter,
   },
   {
     Header: "Email",
     accessor: "email",
+    Filter: TextColumnFilter,
   },
   {
     Header: "Role",
     accessor: "role",
+    Filter: TextColumnFilter,
   },
   {
     Header: "Status",
@@ -109,6 +114,7 @@ const managerColumns = [
       if (value === 1) return "Active";
       return "Inactive";
     },
+    Filter: ActiveStaffFilter,
   },
   {
     Header: "Total deal size",
@@ -117,12 +123,14 @@ const managerColumns = [
       if (value !== undefined) return numberFormat(value);
       return "";
     },
+    Filter: DateColumnFilter,
   },
   {
     Header: "",
     accessor: "id",
     Cell: ({ value }) => <Link to={`/ManageEmployee/${value}`}>Manage</Link>,
     disableSortBy: true,
+    Filter: DateColumnFilter,
   },
 ];
 
@@ -134,19 +142,21 @@ const Dashboard = ({ stages, contacts, role, staff, setStaff }) => {
   const [chartData, setChartData] = useState([]);
 
   useEffect(() => {
-    if (role !== "" && role !== "manager") {
+    if (role !== "" && role === "sales") {
       const staffId = window.localStorage.getItem("staff_id");
-      let filter = contacts.filter((e) => e.staff_id == staffId);
-
+      let filter = contacts.filter(
+        (item) => item.contact_staff_id === parseInt(staffId)
+      );
       if (!isEqual(filter, staffContacts)) {
         const data = filter.reduce((acumulator, currentValue) => {
           const oldValue = acumulator[currentValue.stage] || 0;
+
           return {
             ...acumulator,
             [currentValue.stage]: oldValue + currentValue.deal_size,
           };
         }, {});
-        //  console.log(data);
+
         const chartDataArray = Object.keys(data).map((key) => ({
           name: key,
           value: data[key],
@@ -156,7 +166,27 @@ const Dashboard = ({ stages, contacts, role, staff, setStaff }) => {
         setStaffContacts(filter);
       }
     } else if (role === "manager") {
-      const data = contacts.reduce((acumulator, currentValue) => {
+      //nadji sve idjeve podredjenih trenutnom menadzeru
+      const staffId = JSON.parse(localStorage.getItem("staff_id"));
+      let managerStaffIds = [];
+      let index = 0;
+      staff.forEach((member) => {
+        if (staffId === member.manager_id) {
+          managerStaffIds[index] = member.id;
+          index++;
+        }
+      });
+      //nadji sve kontakte podredjenih
+      let currentManagerContacts = [];
+      index = 0;
+      contacts.forEach((c) => {
+        if (managerStaffIds.includes(c.staff_id)) {
+          currentManagerContacts[index] = c;
+          index++;
+        }
+      });
+      //data za funel chart
+      const data = currentManagerContacts.reduce((acumulator, currentValue) => {
         const oldValue = acumulator[currentValue.stage] || 0;
         return {
           ...acumulator,
@@ -174,7 +204,18 @@ const Dashboard = ({ stages, contacts, role, staff, setStaff }) => {
   }, [chartData, contacts, role, staff, staffContacts, stages]);
 
   if (role !== "" && role === "manager") {
-    table = <ManagerTable columns={managerColumns} data={staff}></ManagerTable>;
+    const staffId = JSON.parse(localStorage.getItem("staff_id"));
+    let managerStaff = [];
+    let index = 0;
+    staff.forEach((member) => {
+      if (staffId === member.manager_id) {
+        managerStaff[index] = member;
+        index++;
+      }
+    });
+    table = (
+      <ManagerTable columns={managerColumns} data={managerStaff}></ManagerTable>
+    );
   }
   if (role !== "" && role !== "manager") {
     table = <Tabela columns={employeeColumns} data={staffContacts} />;
@@ -197,39 +238,6 @@ const Dashboard = ({ stages, contacts, role, staff, setStaff }) => {
           showValues={false}
           getToolTip={(row) => row.name + "\n" + numberFormat(row.value)}
         />
-        <div className="chart-legend">
-          <h5>Stage</h5>
-
-          <p>
-            <FontAwesomeIcon
-              icon={faCircle}
-              className="circle-1"
-            ></FontAwesomeIcon>
-            1. Prospect (10%)
-          </p>
-
-          <p>
-            <FontAwesomeIcon
-              icon={faCircle}
-              className="circle-2"
-            ></FontAwesomeIcon>
-            2. Forecast (50%)
-          </p>
-          <p>
-            <FontAwesomeIcon
-              icon={faCircle}
-              className="circle-3"
-            ></FontAwesomeIcon>
-            3. Forecast (80%)
-          </p>
-          <p>
-            <FontAwesomeIcon
-              icon={faCircle}
-              className="circle-4"
-            ></FontAwesomeIcon>
-            4. Won/Closed (100%)
-          </p>
-        </div>
       </div>
       {table}
     </div>
